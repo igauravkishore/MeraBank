@@ -5,10 +5,9 @@ import com.bankingsystem.accountservice.repository.AccountRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +20,8 @@ import java.util.Random;
 public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private RestClient restClient;
 
     public String generateAccountNumber() {
         String accountNumber;
@@ -31,7 +32,28 @@ public class AccountService {
         return accountNumber;
     }
 
-    public List<Account> findByUserId(Long userId) {
+    public Account createAccount(Account account) {
+        String userId = account.getUserId();
+//        if (userId == null) {
+//            throw new IllegalArgumentException("UserId must be provided to create an account.");
+//        }
+
+        // Verify the user exists before creating an account
+        try {
+            restClient.get()
+                    .uri("http://user-service/api/users/id/{userId}", userId)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.NotFound ex) {
+            throw new RuntimeException("User profile not found for ID: " + userId);
+        }
+
+        account.setAccountNumber(generateAccountNumber());
+        account.setCreatedAt(LocalDateTime.now());
+        return accountRepository.save(account);
+    }
+
+    public List<Account> findByUserId(String userId) {
         return accountRepository.findByUserId(userId);
     }
 

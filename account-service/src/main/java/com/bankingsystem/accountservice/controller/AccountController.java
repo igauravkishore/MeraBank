@@ -25,26 +25,14 @@ public class AccountController {
     private RestClient restClient;
 
     @PostMapping
-    public ResponseEntity<Account> createAccount(@RequestBody Account account) {
-        Long userId = account.getUserId();
-        if (userId == null) {
-            throw new IllegalArgumentException("UserId must be provided to create an account.");
-        }
-
-        // Verify the user exists before creating an account
+    public ResponseEntity<?> createAccount(@RequestBody Account account, @RequestHeader ("X-User-ID") String userId) {
         try {
-            restClient.get()
-                    .uri("http://user-service/api/users/id/{userId}", userId)
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (HttpClientErrorException.NotFound ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Or a custom error object
+            account.setUserId(userId);
+            Account savedAccount = accountService.createAccount(account);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
-
-        account.setAccountNumber(accountService.generateAccountNumber());
-        account.setCreatedAt(LocalDateTime.now());
-        Account savedAccount = accountRepository.save(account);
-        return ResponseEntity.ok(savedAccount);
     }
 
 //    @PutMapping("/{accountNumber}/balance")
@@ -88,7 +76,7 @@ public class AccountController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable String userId) {
         try{
             List<Account> accounts = accountService.findByUserId(userId);
             if(accounts.isEmpty()) {
