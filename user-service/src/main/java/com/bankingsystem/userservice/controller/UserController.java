@@ -28,15 +28,24 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
+    @GetMapping("/by-keycloak/{keycloakId}")
+    public ResponseEntity<User> findByKeycloakId(@PathVariable String keycloakId) {
+        User user =  userService.getUserByKeycloakId(keycloakId);
+        if(user == null){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/id/{id}")
-    ResponseEntity <User> findById(@PathVariable Long id) {
+    public ResponseEntity <User> findById(@PathVariable Long id) {
         return userService.getUserByUserId(id)
                 .map(ResponseEntity::ok)
     .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping
-    ResponseEntity<User> update(@RequestBody User user) {
+    public ResponseEntity<User> update(@RequestBody User user) {
         userService.UpdateUser(user);
         return ResponseEntity.ok(user);
     }

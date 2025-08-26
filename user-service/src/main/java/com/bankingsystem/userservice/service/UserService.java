@@ -27,10 +27,13 @@ public class UserService {
                 userRepository.existsByPhoneNumber(user.getPhoneNumber())) {
             throw new UserAlreadyExistsException("Email or Phone number already exists");
         }
-
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         user.setCreatedAt(LocalDate.now());
         return userRepository.save(user);
+    }
+
+    public User getUserByKeycloakId(String keycloakId) {
+        return userRepository.findByKeycloakId(keycloakId).orElse(null);
     }
 
     public Optional<User> getUserByUserId(Long userId) {
