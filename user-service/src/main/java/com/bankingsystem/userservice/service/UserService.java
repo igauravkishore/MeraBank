@@ -41,9 +41,9 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public User UpdateUser(User user) {
+    public void UpdateUser(User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         user.setUpdatedAt(LocalDate.now());
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 }
