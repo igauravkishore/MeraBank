@@ -1,16 +1,14 @@
 package com.bankingsystem.userservice.model;
-
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.validation.annotation.Validated;
 
+import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
