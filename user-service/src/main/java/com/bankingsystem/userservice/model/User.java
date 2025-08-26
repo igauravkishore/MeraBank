@@ -32,8 +32,8 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String phoneNumber;
-
     @Column(updatable = false, nullable = false)
     private LocalDate CreatedAt;
     private LocalDate UpdatedAt;
+    private String roles;
 }
