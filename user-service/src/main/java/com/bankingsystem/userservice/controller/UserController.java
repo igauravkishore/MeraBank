@@ -1,5 +1,7 @@
 package com.bankingsystem.userservice.controller;
 
+import com.bankingsystem.userservice.dto.UserRequest;
+import com.bankingsystem.userservice.dto.UserResponse;
 import com.bankingsystem.userservice.model.User;
 import com.bankingsystem.userservice.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
+
     public UserController( UserService userService) {
         this.userService = userService;
     }
@@ -23,19 +26,19 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> save(@RequestBody User user) {
-        User savedUser = userService.createUser(user);  // returns saved entity
+    public ResponseEntity<UserResponse> save(@RequestBody UserRequest userRequest) {
+        UserResponse savedUser = userService.createUser(userRequest);  // returns saved entity
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-    @GetMapping("/by-keycloak/{keycloakId}")
-    public ResponseEntity<User> findByKeycloakId(@PathVariable String keycloakId) {
-        User user =  userService.getUserByKeycloakId(keycloakId);
-        if(user == null){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(user);
-    }
+//    @GetMapping("/by-keycloak/{keycloakId}")
+//    public ResponseEntity<User> findByKeycloakId(@PathVariable String keycloakId) {
+//        User user =  userService.getUserByKeycloakId(keycloakId);
+//        if(user == null){
+//            return ResponseEntity.notFound().build();
+//        }
+//        return ResponseEntity.ok(user);
+//    }
 
     @GetMapping("/id/{id}")
     public ResponseEntity <User> findById(@PathVariable Long id) {
@@ -46,7 +49,18 @@ public class UserController {
 
     @PutMapping
     public ResponseEntity<User> update(@RequestBody User user) {
-        userService.UpdateUser(user);
+        userService.updateUser(user);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/{userId}/validate")
+    public ResponseEntity<Boolean> validateUser(@PathVariable String userId) {
+        return ResponseEntity.ok(userService.validateUser(userId));
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 }

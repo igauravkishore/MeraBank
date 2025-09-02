@@ -21,8 +21,7 @@ public class AccountController {
     private AccountRepository accountRepository;
     @Autowired
     private AccountService accountService;
-    @Autowired
-    private RestClient restClient;
+
 
     @PostMapping
     public ResponseEntity<?> createAccount(@RequestBody Account account, @RequestHeader ("X-User-ID") String userId) {

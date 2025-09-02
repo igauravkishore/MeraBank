@@ -1,5 +1,12 @@
 server:
   port: 8082
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
 spring:
   application:
     name: account-service
@@ -15,7 +22,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/

@@ -3,10 +3,10 @@ package com.bankingsystem.accountservice.service;
 import com.bankingsystem.accountservice.model.Account;
 import com.bankingsystem.accountservice.repository.AccountRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 
 
 import java.math.BigDecimal;
@@ -17,11 +17,11 @@ import java.util.Random;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AccountService {
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private RestClient restClient;
+
+    private final AccountRepository accountRepository;
+    private final WebClient userServiceWebClient;
 
     public String generateAccountNumber() {
         String accountNumber;
@@ -39,13 +39,22 @@ public class AccountService {
 //        }
 
         // Verify the user exists before creating an account
-        try {
-            restClient.get()
-                    .uri("http://user-service/api/users/id/{userId}", userId)
+//        try {
+//            restClient.get()
+//                    .uri("http://user-service/api/users/id/{userId}", userId)
+//                    .retrieve()
+//                    .toBodilessEntity();
+//        } catch (HttpClientErrorException.NotFound ex) {
+//            throw new RuntimeException("User profile not found for ID: " + userId);
+//        }
+        try{
+            userServiceWebClient.get()
+                    .uri("/api/users/id/{userId}",userId)
                     .retrieve()
-                    .toBodilessEntity();
-        } catch (HttpClientErrorException.NotFound ex) {
-            throw new RuntimeException("User profile not found for ID: " + userId);
+                    .toBodilessEntity()
+                    .block();
+        }catch (WebClientException ex){
+            throw new RuntimeException("User not found for id " + userId);
         }
 
         account.setAccountNumber(generateAccountNumber());
