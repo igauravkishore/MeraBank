@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -22,17 +23,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public UserResponse createUser(UserRequest userRequest) throws UserAlreadyExistsException {
+    public UserResponse createUser(UserRequest userRequest) {
         if (userRepository.existsByEmail(userRequest.getEmail()) ||
                 userRepository.existsByPhoneNumber(userRequest.getPhoneNumber())) {
-            throw new UserAlreadyExistsException("Email or Phone number already exists");
+            throw new RuntimeException("Email or phone number already exists");
         }
+
         User user = new User();
         user.setEmail(userRequest.getEmail());
-        user.setFullName(userRequest.getFullName());
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
         user.setUsername(userRequest.getUsername());
         user.setPhoneNumber(userRequest.getPhoneNumber());
-        user.setKeycloakId(userRequest.getKeycloakId());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setCreatedAt(LocalDate.now());
 
@@ -43,8 +45,8 @@ public class UserService {
         userResponse.setEmail(savedUser.getEmail());
         userResponse.setUsername(savedUser.getUsername());
         userResponse.setPassword(savedUser.getPassword());
-        userResponse.setKeycloakId(savedUser.getKeycloakId());
-        userResponse.setFullName(savedUser.getFullName());
+        userResponse.setFirstName(savedUser.getFirstName());
+        userResponse.setLastName(savedUser.getLastName());
         userResponse.setCreatedAt(LocalDate.now());
         userResponse.setUpdatedAt(LocalDate.now());
         userResponse.setPhoneNumber(savedUser.getPhoneNumber());
@@ -60,9 +62,6 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public Boolean validateUser(String userId){
-        return userRepository.existsByKeycloakId(userId);
-    }
 
     public void updateUser(User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -72,5 +71,9 @@ public class UserService {
 
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

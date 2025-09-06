@@ -25,11 +25,6 @@ spring:
               uri: lb://transaction-service
               predicates:
                 - Path=/api/transactions/**
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:8181/realms/fitness-app/protocol/openid-connect/certs
 
 
 server:

@@ -12,5 +12,5 @@ import java.math.BigDecimal;
 public class TransferRequest {
     private String fromAccount;
     private String toAccount;
-    private BigDecimal Amount;
+    private BigDecimal amount;
 }

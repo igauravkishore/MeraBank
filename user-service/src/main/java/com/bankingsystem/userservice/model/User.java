@@ -10,19 +10,16 @@ import java.time.LocalDate;
 @Table(name = "users")
 public class User implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(unique = true, nullable = true)
-    private String keycloakId;
-
-    @Column(nullable = false)
-    private String fullName;
-
-    @Column(unique = true)
-    private String username;
+    private String firstName;
+    private String lastName;
 
     @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
     private String password;
 
     @Column(unique = true, nullable = false)
@@ -30,8 +27,21 @@ public class User implements Serializable {
 
     @Column(unique = true, nullable = false)
     private String phoneNumber;
+
     @Column(updatable = false, nullable = false)
-    private LocalDate CreatedAt;
-    private LocalDate UpdatedAt;
+    private LocalDate createdAt;
+
+    private LocalDate updatedAt;
+
     private String roles;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDate.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDate.now();
+    }
 }

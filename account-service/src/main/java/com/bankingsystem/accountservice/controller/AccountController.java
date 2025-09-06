@@ -3,28 +3,26 @@ package com.bankingsystem.accountservice.controller;
 import com.bankingsystem.accountservice.model.Account;
 import com.bankingsystem.accountservice.repository.AccountRepository;
 import com.bankingsystem.accountservice.service.AccountService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
+@RequiredArgsConstructor
 public class AccountController {
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private AccountService accountService;
+    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
 
-    @PostMapping
-    public ResponseEntity<?> createAccount(@RequestBody Account account, @RequestHeader ("X-User-ID") String userId) {
+    @PostMapping("/createAccount/{userId}")
+    public ResponseEntity<?> createAccount(@RequestBody Account account, @PathVariable Long userId) {
+        if (accountRepository.existsByUserId(userId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Account already exists for userId: " + userId);
+        }
         try {
             account.setUserId(userId);
             Account savedAccount = accountService.createAccount(account);
@@ -75,7 +73,7 @@ public class AccountController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable String userId) {
+    public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable Long userId) {
         try{
             List<Account> accounts = accountService.findByUserId(userId);
             if(accounts.isEmpty()) {

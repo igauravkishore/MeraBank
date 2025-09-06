@@ -22,6 +22,6 @@ public class UserRequest {
     @NotBlank(message = "username is required")
     private String username;
 
-    private String keycloakId;
-    private String fullName;
+    private String firstName;
+    private String lastName;
 }

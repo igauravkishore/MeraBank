@@ -19,8 +19,8 @@ public class Transaction {
     private Long id;
 
     private String transactionId;
-    private String toAccountNumber;
-    private String fromAccountNumber;
+    private String toAccount;
+    private String fromAccount;
     private BigDecimal amount;
     private LocalDate date;
     @Enumerated(EnumType.STRING)

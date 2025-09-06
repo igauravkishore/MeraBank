@@ -33,7 +33,7 @@ public class AccountService {
     }
 
     public Account createAccount(Account account) {
-        String userId = account.getUserId();
+        Long userId = account.getUserId();
 //        if (userId == null) {
 //            throw new IllegalArgumentException("UserId must be provided to create an account.");
 //        }
@@ -62,7 +62,7 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
-    public List<Account> findByUserId(String userId) {
+    public List<Account> findByUserId(Long userId) {
         return accountRepository.findByUserId(userId);
     }
 

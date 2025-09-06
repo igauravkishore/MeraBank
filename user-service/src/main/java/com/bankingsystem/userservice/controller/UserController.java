@@ -7,6 +7,8 @@ import com.bankingsystem.userservice.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -25,20 +27,17 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserResponse> save(@RequestBody UserRequest userRequest) {
         UserResponse savedUser = userService.createUser(userRequest);  // returns saved entity
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-//    @GetMapping("/by-keycloak/{keycloakId}")
-//    public ResponseEntity<User> findByKeycloakId(@PathVariable String keycloakId) {
-//        User user =  userService.getUserByKeycloakId(keycloakId);
-//        if(user == null){
-//            return ResponseEntity.notFound().build();
-//        }
-//        return ResponseEntity.ok(user);
-//    }
+
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
 
     @GetMapping("/id/{id}")
     public ResponseEntity <User> findById(@PathVariable Long id) {
@@ -51,11 +50,6 @@ public class UserController {
     public ResponseEntity<User> update(@RequestBody User user) {
         userService.updateUser(user);
         return ResponseEntity.ok(user);
-    }
-
-    @GetMapping("/{userId}/validate")
-    public ResponseEntity<Boolean> validateUser(@PathVariable String userId) {
-        return ResponseEntity.ok(userService.validateUser(userId));
     }
 
     @DeleteMapping("/{userId}")

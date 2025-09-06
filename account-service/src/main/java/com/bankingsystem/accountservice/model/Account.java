@@ -17,7 +17,7 @@ public class Account implements Serializable {
     @Column(unique = true, nullable = false)
     private String accountNumber;
 
-    private String userId;
+    private Long userId;
     private BigDecimal balance;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
@@ -27,6 +27,5 @@ public class Account implements Serializable {
     public enum AccountType {
         SAVINGS, CURRENT, FIXED_DEPOSIT
     }
-
 
 }

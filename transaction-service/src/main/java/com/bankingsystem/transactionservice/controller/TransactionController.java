@@ -3,6 +3,7 @@ package com.bankingsystem.transactionservice.controller;
 import com.bankingsystem.transactionservice.Dtos.TransferRequest;
 import com.bankingsystem.transactionservice.model.Transaction;
 import com.bankingsystem.transactionservice.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,11 +12,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
+@RequiredArgsConstructor
 public class TransactionController {
-    private TransactionService transactionService;
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
+
+    private final TransactionService transactionService;
 
     @PostMapping("/transfer")
     public ResponseEntity<?> createTransaction(@RequestBody TransferRequest transactionRequest) {

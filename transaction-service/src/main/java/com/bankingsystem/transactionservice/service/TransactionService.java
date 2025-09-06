@@ -16,10 +16,10 @@ import java.util.UUID;
 @Service
 public class TransactionService {
 
-    private RestClient restClient;
+    private final RestClient restClient;
     private final TransactionRepository transactionRepository;
-    private KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String ACCOUNT_URL = "http://account-service/api/accounts";
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private static final String ACCOUNT_URL = "http://localhost:8082/api/accounts";
 
     public TransactionService(RestClient restClient, TransactionRepository transactionRepository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.restClient = restClient;
@@ -33,18 +33,20 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setTransactionId(UUID.randomUUID().toString());
         transaction.setTransactionType(Transaction.TransactionType.TRANSFER);
-        transaction.setFromAccountNumber(fromAccount);
-        transaction.setToAccountNumber(toAccount);
+        transaction.setFromAccount(fromAccount);
+        transaction.setToAccount(toAccount);
         transaction.setAmount(amount);
         transaction.setDate(LocalDate.now());
 
+        boolean withdrawDone = false;
         try{
-            restClient.post()
+            restClient.put()
                     .uri(ACCOUNT_URL + "/{fromAccount}/withdraw?amount={amount}", fromAccount, amount)
                     .retrieve()
                     .toBodilessEntity();
+                    withdrawDone = true;
 
-            restClient.post()
+            restClient.put()
                     .uri(ACCOUNT_URL + "/{toAccount}/deposit?amount={amount}", toAccount, amount)
                     .retrieve()
                     .toBodilessEntity();
@@ -53,13 +55,15 @@ public class TransactionService {
             return transactionRepository.save(transaction);
 
         }catch(Exception e){
-            try {
-                restClient.post()
-                        .uri(ACCOUNT_URL + "/{fromAccount}/deposit?amount={amount}", fromAccount, amount)
-                        .retrieve()
-                        .toBodilessEntity();
-            } catch (Exception rollbackEx) {
-                System.err.println("Rollback failed: " + rollbackEx.getMessage());
+            if(withdrawDone) {
+                try {
+                    restClient.put()
+                            .uri(ACCOUNT_URL + "{fromAccount}/deposit?amount={amount}", fromAccount, amount)
+                            .retrieve()
+                            .toBodilessEntity();
+                } catch (Exception rollbackEx) {
+                    System.err.println("Rollback failed: " + rollbackEx.getMessage());
+                }
             }
             kafkaTemplate.send("transaction-events", "Transfer of " + amount + " from " + fromAccount + " to " + toAccount + " is failed.");
             throw new RuntimeException("Transfer failed. Rollback performed: " + e.getMessage());
@@ -72,10 +76,10 @@ public class TransactionService {
     }
 
     public List<Transaction> getTransactionsByFromAccount(String fromAccount) {
-        return transactionRepository.findByFromAccountNumber(fromAccount);
+        return transactionRepository.findByFromAccount(fromAccount);
     }
 
     public List<Transaction> getTransactionsByToAccount(String toAccount) {
-        return transactionRepository.findByToAccountNumber(toAccount);
+        return transactionRepository.findByToAccount(toAccount);
     }
 }
