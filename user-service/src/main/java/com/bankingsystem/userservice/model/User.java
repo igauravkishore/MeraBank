@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @Entity
@@ -33,7 +34,14 @@ public class User implements Serializable {
 
     private LocalDate updatedAt;
 
-    private String roles;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles",                // table name for roles
+            joinColumns = @JoinColumn(name = "user_id") // foreign key to User
+    )
+    @Column(name = "role")
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
 
     @PrePersist
     protected void onCreate() {

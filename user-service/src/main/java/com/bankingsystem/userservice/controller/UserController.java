@@ -1,6 +1,6 @@
 package com.bankingsystem.userservice.controller;
 
-import com.bankingsystem.userservice.dto.UserRequest;
+import com.bankingsystem.userservice.dto.RegisterRequest;
 import com.bankingsystem.userservice.dto.UserResponse;
 import com.bankingsystem.userservice.model.User;
 import com.bankingsystem.userservice.service.UserService;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -22,17 +22,10 @@ public class UserController {
     }
 
     @GetMapping("username/{username}")
-    ResponseEntity<Optional<User>> findByUsername(@PathVariable String username) {
-        Optional<User> user = userService.getUserByUsername(username);
+    public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
+        UserResponse user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
-
-    @PostMapping("/register")
-    public ResponseEntity<UserResponse> save(@RequestBody UserRequest userRequest) {
-        UserResponse savedUser = userService.createUser(userRequest);  // returns saved entity
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-    }
-
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {

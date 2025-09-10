@@ -46,7 +46,7 @@ public class TransactionService {
                     .toBodilessEntity();
                     withdrawDone = true;
 
-            restClient.put()
+            restClient.post()
                     .uri(ACCOUNT_URL + "/{toAccount}/deposit?amount={amount}", toAccount, amount)
                     .retrieve()
                     .toBodilessEntity();
@@ -57,7 +57,7 @@ public class TransactionService {
         }catch(Exception e){
             if(withdrawDone) {
                 try {
-                    restClient.put()
+                    restClient.post()
                             .uri(ACCOUNT_URL + "{fromAccount}/deposit?amount={amount}", fromAccount, amount)
                             .retrieve()
                             .toBodilessEntity();

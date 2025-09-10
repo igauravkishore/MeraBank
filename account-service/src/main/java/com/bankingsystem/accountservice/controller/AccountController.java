@@ -52,7 +52,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/{accountNumber}/withdraw")
+    @PutMapping("/{accountNumber}/withdraw")
     public ResponseEntity<Account> withdraw(@PathVariable String accountNumber, @RequestParam BigDecimal amount){
         try {
             Account withdrawedAccount = accountService.withdraw(accountNumber, amount);
