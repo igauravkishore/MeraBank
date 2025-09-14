@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Table(name = "accounts")
 public class Account implements Serializable {
     @Id
     @GeneratedValue
@@ -17,7 +18,7 @@ public class Account implements Serializable {
     @Column(unique = true, nullable = false)
     private String accountNumber;
 
-    private Long userId;
+    private Long customerId;
     private BigDecimal balance;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;

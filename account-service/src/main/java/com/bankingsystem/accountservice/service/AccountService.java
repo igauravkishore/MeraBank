@@ -33,7 +33,7 @@ public class AccountService {
     }
 
     public Account createAccount(Account account) {
-        Long userId = account.getUserId();
+        Long customerId = account.getCustomerId();
 //        if (userId == null) {
 //            throw new IllegalArgumentException("UserId must be provided to create an account.");
 //        }
@@ -49,29 +49,34 @@ public class AccountService {
 //        }
         try{
             userServiceWebClient.get()
-                    .uri("/api/users/id/{userId}",userId)
+                    .uri("/customers/id/{customerId}",customerId)
                     .retrieve()
                     .toBodilessEntity()
                     .block();
         }catch (WebClientException ex){
-            throw new RuntimeException("User not found for id " + userId);
+            throw new RuntimeException("Customer not found for id " + customerId);
+        }catch (Exception ex){
+            throw new RuntimeException("Error verifying user: " + ex.getMessage());
         }
 
         account.setAccountNumber(generateAccountNumber());
         account.setCreatedAt(LocalDateTime.now());
+        if (account.getBalance() == null) {
+            account.setBalance(BigDecimal.ZERO);
+        }
         return accountRepository.save(account);
     }
 
-    public List<Account> findByUserId(Long userId) {
-        return accountRepository.findByUserId(userId);
+    public List<Account> findByCustomerId(Long userId) {
+        return accountRepository.findByCustomerId(userId);
     }
 
     public Account findByAccountNumber(String accountNumber) {
-        Optional<Account> account = Optional.ofNullable(accountRepository.findByAccountNumber(accountNumber));
-        if(account.isEmpty()){
-            throw  new RuntimeException("Invalid Account Number");
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if(account == null){
+            throw new RuntimeException("Account not found for account number: " + accountNumber);
         }
-        return account.get();
+        return account;
     }
 
 
@@ -87,12 +92,16 @@ public class AccountService {
 //        return accountRepository.save(account);
 //    }
 
-    public Account deposit(String AccountNumber, BigDecimal amount){
-        Optional<Account> accountOptional = Optional.ofNullable(accountRepository.findByAccountNumber(AccountNumber));
-        if(accountOptional.isEmpty()){
+    public Account deposit(String accountNumber, BigDecimal amount){
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Amount must be positive");
+        }
+
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if(account == null){
             throw new RuntimeException("Account not found");
         }
-        Account account = accountOptional.get();
+
         BigDecimal currentBalance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
         account.setBalance(currentBalance.add(amount));
         account.setUpdatedAt(LocalDateTime.now());
@@ -100,29 +109,38 @@ public class AccountService {
     }
 
 
-    public Account withdraw(String AccountNumber,BigDecimal amount){
-        Optional<Account> accountOptional = Optional.ofNullable(accountRepository.findByAccountNumber(AccountNumber));
-        if(accountOptional.isEmpty()){
+    public Account withdraw(String accountNumber, BigDecimal amount){
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Amount must be positive");
+        }
+
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if(account == null){
             throw new RuntimeException("Account not found");
         }
-        Account account = accountOptional.get();
+
         if (account.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient funds");
         }
+
         account.setBalance(account.getBalance().subtract(amount));
         account.setUpdatedAt(LocalDateTime.now());
         return accountRepository.save(account);
     }
 
-    public BigDecimal getBalance(String AccountNumber){
-        Optional<Account> accountOptional = Optional.ofNullable(accountRepository.findByAccountNumber(AccountNumber));
-        if(accountOptional.isEmpty()){
+    public BigDecimal getBalance(String accountNumber){
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if(account == null){
             throw new RuntimeException("Account not found");
         }
-        return accountOptional.get().getBalance();
+        return account.getBalance();
     }
 
     public void deleteAccount(String accountNumber) {
-        accountRepository.delete(accountRepository.findByAccountNumber(accountNumber));
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if(account == null){
+            throw new RuntimeException("Account not found");
+        }
+        accountRepository.delete(account);
     }
 }

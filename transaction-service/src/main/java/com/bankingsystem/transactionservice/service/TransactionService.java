@@ -19,7 +19,7 @@ public class TransactionService {
     private final RestClient restClient;
     private final TransactionRepository transactionRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String ACCOUNT_URL = "http://localhost:8082/api/accounts";
+    private static final String ACCOUNT_URL = "http://localhost:8082/accounts";
 
     public TransactionService(RestClient restClient, TransactionRepository transactionRepository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.restClient = restClient;
@@ -28,44 +28,45 @@ public class TransactionService {
     }
 
     @Transactional
-    public Transaction processTransfer(String fromAccount, String toAccount, BigDecimal amount) {
+    public Transaction processTransfer(String fromAccountNumber, String toAccountNumber, BigDecimal amount) {
 
         Transaction transaction = new Transaction();
         transaction.setTransactionId(UUID.randomUUID().toString());
         transaction.setTransactionType(Transaction.TransactionType.TRANSFER);
-        transaction.setFromAccount(fromAccount);
-        transaction.setToAccount(toAccount);
+        transaction.setFromAccountNumber(fromAccountNumber);
+        transaction.setToAccountNumber(toAccountNumber);
         transaction.setAmount(amount);
         transaction.setDate(LocalDate.now());
 
         boolean withdrawDone = false;
         try{
             restClient.put()
-                    .uri(ACCOUNT_URL + "/{fromAccount}/withdraw?amount={amount}", fromAccount, amount)
+                    .uri(ACCOUNT_URL + "/{fromAccountNumber}/withdraw?amount={amount}", fromAccountNumber, amount)
                     .retrieve()
                     .toBodilessEntity();
                     withdrawDone = true;
 
             restClient.post()
-                    .uri(ACCOUNT_URL + "/{toAccount}/deposit?amount={amount}", toAccount, amount)
+                    .uri(ACCOUNT_URL + "/{toAccountNumber}/deposit?amount={amount}", toAccountNumber, amount)
                     .retrieve()
                     .toBodilessEntity();
             transaction.setTransactionStatus(Transaction.TransactionStatus.SUCCESS);
-            kafkaTemplate.send("transaction-events", "Transfer of " + amount + " from " + fromAccount + " to " + toAccount + " successful.");
+            kafkaTemplate.send("transaction-events", "Transfer of " + amount + " from " + fromAccountNumber + " to " + toAccountNumber
+                    + " successful.");
             return transactionRepository.save(transaction);
 
         }catch(Exception e){
             if(withdrawDone) {
                 try {
                     restClient.post()
-                            .uri(ACCOUNT_URL + "{fromAccount}/deposit?amount={amount}", fromAccount, amount)
+                            .uri(ACCOUNT_URL + "{fromAccount}/deposit?amount={amount}", fromAccountNumber, amount)
                             .retrieve()
                             .toBodilessEntity();
                 } catch (Exception rollbackEx) {
                     System.err.println("Rollback failed: " + rollbackEx.getMessage());
                 }
             }
-            kafkaTemplate.send("transaction-events", "Transfer of " + amount + " from " + fromAccount + " to " + toAccount + " is failed.");
+            kafkaTemplate.send("transaction-events", "Transfer of " + amount + " from " + fromAccountNumber + " to " + toAccountNumber + " is failed.");
             throw new RuntimeException("Transfer failed. Rollback performed: " + e.getMessage());
         }
     }
@@ -76,10 +77,10 @@ public class TransactionService {
     }
 
     public List<Transaction> getTransactionsByFromAccount(String fromAccount) {
-        return transactionRepository.findByFromAccount(fromAccount);
+        return transactionRepository.findByFromAccountNumber(fromAccount);
     }
 
     public List<Transaction> getTransactionsByToAccount(String toAccount) {
-        return transactionRepository.findByToAccount(toAccount);
+        return transactionRepository.findByToAccountNumber(toAccount);
     }
 }

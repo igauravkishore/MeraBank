@@ -11,18 +11,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping("/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 
     private final TransactionService transactionService;
 
+
     @PostMapping("/transfer")
     public ResponseEntity<?> createTransaction(@RequestBody TransferRequest transactionRequest) {
         try {
             Transaction savedTransaction = transactionService.processTransfer(
-                    transactionRequest.getFromAccount(),
-                    transactionRequest.getToAccount(),
+                    transactionRequest.getFromAccountNumber(),
+                    transactionRequest.getToAccountNumber(),
                     transactionRequest.getAmount()
             );
 

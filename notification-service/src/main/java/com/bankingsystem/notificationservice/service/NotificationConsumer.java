@@ -25,8 +25,11 @@ public class NotificationConsumer {
         String subject = "Transaction Notification";
         String body = "Dear User,\n\nA transaction event occurred:\n" + message + "\n\nThank you!";
 
-        emailService.sendEmail(to, subject, body);
-
-        System.out.println("Email sent successfully to " + to);
+        try {
+            emailService.sendEmail(to, subject, body);
+            LOGGER.info("Email sent successfully to " + to);
+        }catch (Exception e){
+            LOGGER.error("Failed to send email for message: {}", message, e);
+        }
     }
 }

@@ -11,20 +11,22 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/accounts") //from /api/accounts -> /accounts
 @RequiredArgsConstructor
+@CrossOrigin("*")
 public class AccountController {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
 
 
-    @PostMapping("/createAccount/{userId}")
-    public ResponseEntity<?> createAccount(@RequestBody Account account, @PathVariable Long userId) {
-        if (accountRepository.existsByUserId(userId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Account already exists for userId: " + userId);
+    @PostMapping("/createAccount/{customerId}")
+    public ResponseEntity<?> createAccount(@RequestBody Account account,
+                                           @PathVariable Long customerId) {
+        if (accountRepository.existsByCustomerId(customerId)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Account already exists for userId: " + customerId);
         }
         try {
-            account.setUserId(userId);
+            account.setCustomerId(customerId);
             Account savedAccount = accountService.createAccount(account);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedAccount);
         } catch (RuntimeException ex) {
@@ -32,15 +34,6 @@ public class AccountController {
         }
     }
 
-//    @PutMapping("/{accountNumber}/balance")
-//    public ResponseEntity<Account> updateAccountBalance(@PathVariable String accountNumber, @RequestParam BigDecimal amount){
-//        try{
-//            Account updatedAccount = accountService.updateBalance(accountNumber, amount);
-//            return ResponseEntity.ok(updatedAccount);
-//        }catch(RuntimeException e){
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
 
     @PostMapping("/{accountNumber}/deposit")
     public ResponseEntity<Account> deposit(@PathVariable String accountNumber, @RequestParam BigDecimal amount){
@@ -72,10 +65,10 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findByAccountNumber(accountNumber));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable Long userId) {
+    @GetMapping("/{customerId}")
+    public ResponseEntity<List<Account>> getAccountsByCustomerId(@PathVariable Long customerId) {
         try{
-            List<Account> accounts = accountService.findByUserId(userId);
+            List<Account> accounts = accountService.findByCustomerId(customerId);
             if(accounts.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }else return ResponseEntity.ok(accounts);
@@ -94,4 +87,5 @@ public class AccountController {
         accountService.deleteAccount(accountNumber);
         return ResponseEntity.noContent().build();
     }
+
 }
