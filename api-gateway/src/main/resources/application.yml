@@ -14,12 +14,20 @@ spring:
       server:
         webflux:
           routes:
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/**
+              filters:
+                - StripPrefix=1
+
             - id: customer-service
               uri: lb://CUSTOMER-SERVICE
               predicates:
                 - Path=/api/customers/**
               filters:
                 - StripPrefix=1
+                - JwtValidation
 
             - id: account-service
               uri: lb://ACCOUNT-SERVICE
@@ -27,6 +35,7 @@ spring:
                 - Path=/api/accounts/**
               filters:
                 - StripPrefix=1
+                - JwtValidation
 
             - id: transaction-service
               uri: lb://TRANSACTION-SERVICE
@@ -34,6 +43,7 @@ spring:
                 - Path=/api/transactions/**
               filters:
                 - StripPrefix=1
+                - JwtValidation
 
 
 server:
