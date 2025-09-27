@@ -4,6 +4,11 @@ import com.bankingsystem.accountservice.model.Account;
 import com.bankingsystem.accountservice.repository.AccountRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
@@ -21,6 +26,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final WebClient userServiceWebClient;
+    private final CacheManager cacheManager;
 
     public String generateAccountNumber() {
         String accountNumber;
@@ -63,14 +69,19 @@ public class AccountService {
         if (account.getBalance() == null) {
             account.setBalance(BigDecimal.ZERO);
         }
-        return accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+        cacheManager.getCache("accounts").put(savedAccount.getAccountNumber(), savedAccount);
+        cacheManager.getCache("accountBalances").put(savedAccount.getAccountNumber(), savedAccount.getBalance());
+        return savedAccount;
     }
 
     public List<Account> findByCustomerId(Long userId) {
         return accountRepository.findByCustomerId(userId);
     }
 
+    @Cacheable(value = "accounts", key = "#accountNumber")
     public Account findByAccountNumber(String accountNumber) {
+        System.out.println("Fetching account from DB: " + accountNumber);
         Account account = accountRepository.findByAccountNumber(accountNumber);
         if(account == null){
             throw new RuntimeException("Account not found for account number: " + accountNumber);
@@ -91,6 +102,7 @@ public class AccountService {
 //        return accountRepository.save(account);
 //    }
 
+    @CachePut(value = "accounts", key = "#accountNumber")
     public Account deposit(String accountNumber, BigDecimal amount){
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be positive");
@@ -104,11 +116,13 @@ public class AccountService {
         BigDecimal currentBalance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
         account.setBalance(currentBalance.add(amount));
         account.setUpdatedAt(LocalDateTime.now());
-        return accountRepository.save(account);
+        Account updatedAccount = accountRepository.save(account);
+        cacheManager.getCache("accountBalances").put(accountNumber, updatedAccount.getBalance());
+        return updatedAccount;
     }
 
-
-    public Account withdraw(String accountNumber, BigDecimal amount){
+    @CachePut(value = "accounts", key = "#accountNumber")
+    public Account withdraw(String accountNumber,  BigDecimal amount){
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Amount must be positive");
         }
@@ -124,10 +138,15 @@ public class AccountService {
 
         account.setBalance(account.getBalance().subtract(amount));
         account.setUpdatedAt(LocalDateTime.now());
-        return accountRepository.save(account);
+
+        Account updatedAccount = accountRepository.save(account);
+        cacheManager.getCache("accountBalances").put(accountNumber, updatedAccount.getBalance());
+        return updatedAccount;
     }
 
-    public BigDecimal getBalance(String accountNumber){
+    @Cacheable(value = "accountBalances", key = "#accountNumber")
+     public BigDecimal getBalance(String accountNumber){
+        System.out.println("Fetching balance from DB for account: " + accountNumber);
         Account account = accountRepository.findByAccountNumber(accountNumber);
         if(account == null){
             throw new RuntimeException("Account not found");
@@ -135,6 +154,11 @@ public class AccountService {
         return account.getBalance();
     }
 
+
+    @Caching(evict = {
+            @CacheEvict(value = "accounts", key = "#accountNumber"),
+            @CacheEvict(value = "accountBalances", key = "#accountNumber")
+    })
     public void deleteAccount(String accountNumber) {
         Account account = accountRepository.findByAccountNumber(accountNumber);
         if(account == null){
