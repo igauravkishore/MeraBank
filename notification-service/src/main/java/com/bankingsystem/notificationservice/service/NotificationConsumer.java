@@ -21,9 +21,9 @@ public class NotificationConsumer {
         LOGGER.info("Received notification event: {}", message);
 
         // Send email notification
-        String to = "gvsinghania1997@gmail.com";  // Replace with real recipient
+        String to = "deepanshukishore2007@gmail.com";  // Replace with real recipient
         String subject = "Transaction Notification";
-        String body = "Dear User,\n\nA transaction event occurred:\n" + message + "\n\nThank you!";
+        String body = "Dear Customer,\n\nA transaction event occurred:\n" + message + "\n\nThank you!";
 
         try {
             emailService.sendEmail(to, subject, body);
